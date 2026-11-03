@@ -1,0 +1,28 @@
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      # Ollama runs on the host; reach it from inside the container.
+      OLLAMA_BASE_URL: http://host.docker.internal:11434
+      OLLAMA_EMBEDDING_MODEL: nomic-embed-text
+      OLLAMA_CHAT_MODEL: llama3.1:8b
+      FRONTEND_URL: http://localhost:8501
+      DATA_DIR: /app/data
+    volumes:
+      - app_data:/app/data
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "8501:8501"
+    environment:
+      API_BASE_URL: http://backend:8000
+    depends_on:
+      - backend
+
+volumes:
+  app_data:
