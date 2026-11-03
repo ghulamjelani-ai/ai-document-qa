@@ -1,9 +1,12 @@
-"""Turn text into vectors. Two interchangeable providers.
+"""Turn text into vectors. Three interchangeable providers.
 
 - "ollama": calls a local Ollama server (default, no API key, free).
 - "sentence_transformers": runs a local model in-process (offline, good for a
   showcase of the sentence-transformers stack). Imported lazily so the heavy
   dependency is only needed when this provider is actually selected.
+- "openai": any OpenAI-compatible /embeddings API (base URL configurable), so the
+  same code works with OpenAI, Jina, Google Gemini's OpenAI endpoint, Voyage, etc.
+  This is what the hosted (cloud) deployment uses, since Ollama is local-only.
 """
 from __future__ import annotations
 
@@ -66,6 +69,42 @@ class SentenceTransformersEmbedder(Embedder):
         return _normalize(arr)
 
 
+class OpenAIEmbedder(Embedder):
+    """Any OpenAI-compatible /embeddings endpoint (OpenAI, Jina, Gemini, Voyage…)."""
+
+    def __init__(self, settings: Settings):
+        if not settings.embeddings_api_key:
+            raise EmbeddingError(
+                "EMBEDDINGS_API_KEY is not set but embeddings_provider=openai"
+            )
+        self._url = settings.embeddings_base_url.rstrip("/") + "/embeddings"
+        self._key = settings.embeddings_api_key
+        self._model = settings.embeddings_model
+        self._timeout = settings.request_timeout
+        self.dim = 0  # discovered on first call
+
+    def embed(self, texts: list[str]) -> np.ndarray:
+        headers = {"Authorization": f"Bearer {self._key}"}
+        try:
+            with httpx.Client(timeout=self._timeout) as client:
+                resp = client.post(
+                    self._url,
+                    json={"model": self._model, "input": texts},
+                    headers=headers,
+                )
+                resp.raise_for_status()
+                data = resp.json()["data"]
+        except httpx.HTTPError as exc:
+            raise EmbeddingError(
+                f"Embedding API request failed ({self._model}): {exc}"
+            ) from exc
+        # Preserve input order (OpenAI returns an "index" per item).
+        data = sorted(data, key=lambda d: d.get("index", 0))
+        arr = np.asarray([d["embedding"] for d in data], dtype="float32")
+        self.dim = arr.shape[1] if arr.size else 0
+        return _normalize(arr)
+
+
 def _normalize(arr: np.ndarray) -> np.ndarray:
     """L2-normalize rows so an inner product equals cosine similarity."""
     if arr.size == 0:
@@ -81,4 +120,6 @@ def build_embedder(settings: Settings) -> Embedder:
         return OllamaEmbedder(settings)
     if provider == "sentence_transformers":
         return SentenceTransformersEmbedder(settings)
+    if provider == "openai":
+        return OpenAIEmbedder(settings)
     raise EmbeddingError(f"Unknown embeddings_provider: {settings.embeddings_provider}")

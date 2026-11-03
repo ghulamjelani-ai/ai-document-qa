@@ -29,8 +29,10 @@ the files don't cover the question — so you can trust the output.
 - 🚫 **Honest "I don't know"** when the documents don't contain the answer.
 - 📊 **Evaluation harness** — a labelled golden set scored with **Recall@k, Precision@k
   and MRR** across retrieval modes (see the table below).
-- 🔌 **Pluggable providers** — embeddings (`ollama` / `sentence-transformers`) and
-  LLM (`ollama` / `openai`) are swappable via environment variables.
+- 🔌 **Pluggable providers** — embeddings (`ollama` / `sentence-transformers` /
+  any OpenAI-compatible API) and LLM (`ollama` / OpenAI-compatible: OpenAI, Groq,
+  OpenRouter, Gemini…) are swappable via environment variables — local for free,
+  cloud APIs for a public deployment.
 - 💾 **Persistent index** (FAISS + metadata) that survives restarts; list and delete documents.
 - 🧪 **Tested** (pytest) and **containerized** (Docker Compose).
 - 🛡️ Clean error handling, request IDs, health/readiness probes, CORS.
@@ -116,6 +118,41 @@ docker compose up --build
 
 UI on http://localhost:8501, API on http://localhost:8000. Ollama is used from
 the host automatically via `host.docker.internal`.
+
+## Deploy as a public web app (free)
+
+Locally the app runs on Ollama (free, private). To host it so **anyone can use it
+from a link**, swap Ollama for free cloud APIs — no GPU to host. The root
+`Dockerfile` runs the backend and the Streamlit UI together in one container
+(the UI on the host's `$PORT`), so it deploys as a single service on Render,
+Railway or Fly.
+
+**1. Get two free API keys (no credit card):**
+- **LLM — [Groq](https://console.groq.com)** (fast, generous free tier).
+- **Embeddings — [Jina AI](https://jina.ai/embeddings/)** or Google Gemini
+  (both have a free tier and an OpenAI-compatible endpoint).
+
+**2. Deploy the repo as a Docker web service** and set these environment variables:
+
+```
+LLM_PROVIDER=openai
+OPENAI_API_KEY=<your Groq key>
+OPENAI_BASE_URL=https://api.groq.com/openai/v1
+OPENAI_CHAT_MODEL=llama-3.3-70b-versatile
+
+EMBEDDINGS_PROVIDER=openai
+EMBEDDINGS_API_KEY=<your Jina key>
+EMBEDDINGS_BASE_URL=https://api.jina.ai/v1
+EMBEDDINGS_MODEL=jina-embeddings-v3
+```
+
+The host provides `$PORT`; the UI binds to it automatically. Free tiers sleep when
+idle (first request after a nap is slow) and the free LLM has per-minute limits —
+fine for a demo or portfolio, not heavy traffic.
+
+> Because providers are OpenAI-compatible, the same two variables also accept
+> OpenAI, OpenRouter, Voyage, or Google Gemini — just change the base URL, model
+> and key.
 
 ## API overview
 

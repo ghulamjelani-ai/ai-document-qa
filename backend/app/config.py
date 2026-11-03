@@ -22,11 +22,16 @@ class Settings(BaseSettings):
     frontend_url: str = "http://localhost:8501"
     data_dir: Path = Field(default=Path("data"))
 
-    # --- Embeddings provider: "ollama" | "sentence_transformers" ---
+    # --- Embeddings provider: "ollama" | "sentence_transformers" | "openai" ---
     embeddings_provider: str = "ollama"
     ollama_base_url: str = "http://127.0.0.1:11434"
     ollama_embedding_model: str = "nomic-embed-text"
     sentence_transformers_model: str = "all-MiniLM-L6-v2"
+    # Used when embeddings_provider=openai (any OpenAI-compatible /embeddings API:
+    # OpenAI, Jina, Gemini's OpenAI endpoint, Voyage…). This is the cloud default.
+    embeddings_api_key: str = ""
+    embeddings_base_url: str = "https://api.openai.com/v1"
+    embeddings_model: str = "text-embedding-3-small"
 
     # --- LLM provider: "ollama" | "openai" ---
     llm_provider: str = "ollama"

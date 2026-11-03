@@ -1,0 +1,13 @@
+# Normalize line endings: LF in the repo, native on checkout.
+* text=auto eol=lf
+
+# Shell scripts must stay LF so the shebang works inside Linux containers.
+*.sh text eol=lf
+
+# Binary assets: no conversion, no diff noise.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
