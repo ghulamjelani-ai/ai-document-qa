@@ -28,6 +28,9 @@ class Source(BaseModel):
 class AskRequest(BaseModel):
     question: str = Field(..., min_length=1, max_length=2000)
     top_k: int | None = Field(default=None, ge=1, le=20)
+    source: str | None = Field(
+        default=None, description="Optional filename filter: search only this document."
+    )
 
 
 class AskResponse(BaseModel):
@@ -35,6 +38,7 @@ class AskResponse(BaseModel):
     sources: list[Source]
     used_context: bool
     model: str
+    retrieval_mode: str
 
 
 class HealthResponse(BaseModel):

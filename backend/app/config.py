@@ -41,6 +41,11 @@ class Settings(BaseSettings):
     top_k: int = 4                  # chunks retrieved per question
     score_threshold: float = 0.25   # min cosine score to treat context as relevant
 
+    # --- Retrieval strategy: "hybrid" | "vector" | "keyword" ---
+    retrieval_mode: str = "hybrid"  # hybrid = BM25 keyword + vector, fused with RRF
+    rrf_k: int = 60                 # Reciprocal Rank Fusion constant
+    candidate_pool: int = 20        # how many candidates each retriever contributes before fusion
+
     # --- Limits ---
     max_upload_mb: int = 25
     request_timeout: int = 120      # seconds for LLM/embedding calls

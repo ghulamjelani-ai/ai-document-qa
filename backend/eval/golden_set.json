@@ -1,0 +1,20 @@
+{
+  "document": "sample_docs/shoppk_handbook.txt",
+  "questions": [
+    {"q": "How long is the refund window for electronics?", "expect": ["7-day refund window"]},
+    {"q": "Can I get my money back on a normal item?", "expect": ["returned for a full refund within 14 days"]},
+    {"q": "How do I start a warranty claim?", "expect": ["start a warranty claim"]},
+    {"q": "How many days does delivery to other cities take?", "expect": ["2 to 4 working days"]},
+    {"q": "Do you deliver on Sundays?", "expect": ["do not deliver on Sundays"]},
+    {"q": "When is the delivery free?", "expect": ["free for orders above 3000"]},
+    {"q": "Can I pay with JazzCash?", "expect": ["JazzCash"]},
+    {"q": "Is cash on delivery available?", "expect": ["Cash on delivery"]},
+    {"q": "Can I exchange an item for a different size?", "expect": ["exchanged once for a different size"]},
+    {"q": "How do I track order 4821?", "expect": ["tracking number", "shoppk.pk/track"]},
+    {"q": "How do loyalty points work?", "expect": ["1 point for every 100 rupees"]},
+    {"q": "How do I delete my personal data?", "expect": ["request deletion of your personal data"]},
+    {"q": "When is support open?", "expect": ["9 am to 9 pm"]},
+    {"q": "Which payment wallets do you support?", "expect": ["JazzCash and EasyPaisa"]},
+    {"q": "What is the delivery fee for a small order?", "expect": ["flat delivery fee of 199"]}
+  ]
+}

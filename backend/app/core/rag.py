@@ -33,6 +33,7 @@ class Answer:
     hits: list[SearchHit]
     used_context: bool
     model: str
+    retrieval_mode: str
 
 
 class RagEngine:
@@ -77,15 +78,35 @@ class RagEngine:
         }
 
     # ---------- question answering ----------
-    def answer(self, question: str, top_k: int | None = None) -> Answer:
+    def answer(
+        self, question: str, top_k: int | None = None, source: str | None = None
+    ) -> Answer:
         k = top_k or self.settings.top_k
         query_vec = self.embedder.embed([question])[0]
-        hits = self.store.search(query_vec, k)
-        relevant = [h for h in hits if h.score >= self.settings.score_threshold]
+        hits = self.store.hybrid_search(
+            question,
+            query_vec,
+            top_k=k,
+            mode=self.settings.retrieval_mode,
+            rrf_k=self.settings.rrf_k,
+            pool=self.settings.candidate_pool,
+            source=source,
+        )
+        # A chunk counts as relevant if it is semantically close (cosine) OR it
+        # matched the keyword search — this is the whole point of hybrid search,
+        # where exact terms (codes, names) score low on cosine but high on BM25.
+        relevant = [
+            h for h in hits
+            if h.score >= self.settings.score_threshold or h.keyword_match
+        ]
 
         if not relevant:
             return Answer(
-                answer=NO_ANSWER, hits=[], used_context=False, model=self.llm.name
+                answer=NO_ANSWER,
+                hits=[],
+                used_context=False,
+                model=self.llm.name,
+                retrieval_mode=self.settings.retrieval_mode,
             )
 
         context = "\n\n".join(
@@ -101,5 +122,9 @@ class RagEngine:
         )
         text = self.llm.complete(SYSTEM_PROMPT, user_prompt)
         return Answer(
-            answer=text, hits=relevant, used_context=True, model=self.llm.name
+            answer=text,
+            hits=relevant,
+            used_context=True,
+            model=self.llm.name,
+            retrieval_mode=self.settings.retrieval_mode,
         )

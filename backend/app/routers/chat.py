@@ -18,7 +18,7 @@ async def ask(request: Request, body: AskRequest):
             status_code=409, detail="No documents have been uploaded yet."
         )
     try:
-        result = engine.answer(body.question, body.top_k)
+        result = engine.answer(body.question, body.top_k, source=body.source)
     except EmbeddingError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
     except LLMError as exc:
@@ -40,4 +40,5 @@ async def ask(request: Request, body: AskRequest):
         sources=sources,
         used_context=result.used_context,
         model=result.model,
+        retrieval_mode=result.retrieval_mode,
     )
